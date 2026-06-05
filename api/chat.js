@@ -12,10 +12,8 @@ export default async function handler(req, res) {
 
 ABOUT ABS FOUNDATION, BHILAI:
 - Located in Bhilai, Chhattisgarh
-- Specializes in Commerce education
 - Courses: CA Foundation, CA Inter, CA Final, CMA Foundation, CMA Inter, CMA Final, CS Foundation, CS Executive, CS Professional, B.Com, Class 11 Commerce, Class 12 Commerce
 - 15+ years experience, 500+ students/year, 90%+ pass rate
-- Experienced CA/CMA/CS qualified faculty
 - Morning (7-9 AM), Evening (5-7 PM), Weekend batches
 - New batch: 15th July 2025
 - EMI: 0% interest, 3-6 months | Merit scholarships: 10-50% off
@@ -33,54 +31,79 @@ FEES:
 - B.Com: Rs.25,000/year
 
 YOUR JOB:
-1. Greet warmly, ask student's name first
+1. Greet warmly, ask student name first
 2. Understand current class/qualification
 3. Understand course interest
-4. Give accurate helpful info about courses, fees, career scope
-5. Answer ANY question — fees, faculty, timing, career scope, syllabus, CA vs CMA difference etc
-6. Guide toward free demo class or counseling call
-7. Be warm, encouraging, human-like — like a real didi/bhaiya counselor
-8. Always use student's name once you know it
-9. Keep replies concise — 3-5 lines max unless details asked
-10. Always end with a question to keep conversation going
+4. Answer ANY question about courses, fees, career scope, syllabus
+5. Guide toward free demo class or counseling call
+6. Be warm, encouraging, human-like
+7. Keep replies 3-5 lines max
+8. Always end with a question
 
-Respond in Hinglish naturally. At the END of every reply add this JSON on a new line:
-###CRM###{"name":"<student name or null>","class":"<their class/level or null>","course":"<course interest or null>","category":"<hot|warm|counsel|timepass|null>"}###END###
+Respond in Hinglish naturally. At END of every reply add:
+###CRM###{"name":"<name or null>","class":"<class or null>","course":"<course or null>","category":"<hot|warm|counsel|timepass|null>"}###END###
 
-Category rules:
-- hot = ready to join soon, asking about admission, very interested, wants to enroll
-- warm = interested but exploring, wants more info, positive responses
-- counsel = confused, needs guidance, has doubts about career/course
-- timepass = vague responses, no real intent, just browsing`;
+Category: hot=ready to join, warm=interested, counsel=confused/needs guidance, timepass=no intent`;
 
-    // Convert messages to Gemini format
-    const geminiContents = messages.map(m => ({
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    // Try models in order until one works
+    const models = [
+      'gemini-1.5-flash',
+      'gemini-1.0-pro',
+      'gemini-pro'
+    ];
+
+    const geminiMessages = messages.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
     }));
 
-    // Add system instruction as first user message if not present
-    const apiKey = process.env.GEMINI_API_KEY;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    let lastError = null;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: SYSTEM }] },
-        contents: geminiContents,
-        generationConfig: {
-          temperature: 0.8,
-          maxOutputTokens: 800,
+    for (const model of models) {
+      try {
+        // Try v1 first, then v1beta
+        for (const version of ['v1', 'v1beta']) {
+          const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
+          
+          const body = {
+            contents: geminiMessages,
+            generationConfig: { temperature: 0.8, maxOutputTokens: 800 }
+          };
+
+          // system_instruction only supported in v1beta
+          if (version === 'v1beta') {
+            body.system_instruction = { parts: [{ text: SYSTEM }] };
+          } else {
+            // For v1, prepend system as first user message
+            body.contents = [
+              { role: 'user', parts: [{ text: SYSTEM + '\n\nUser: ' + (geminiMessages[0]?.parts[0]?.text || 'Hello') }] },
+              ...geminiMessages.slice(1)
+            ];
+          }
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+
+          const data = await response.json();
+          
+          if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+            const text = data.candidates[0].content.parts[0].text;
+            return res.status(200).json({ text, model: `${version}/${model}` });
+          }
+          
+          lastError = data.error?.message || `${model} failed`;
         }
-      })
-    });
+      } catch(e) {
+        lastError = e.message;
+      }
+    }
 
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data.error?.message || 'Gemini API error' });
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return res.status(200).json({ text });
+    return res.status(500).json({ error: lastError || 'All models failed' });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
