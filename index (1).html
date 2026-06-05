@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ABS Foundation Bhilai — AI Counselor</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --primary: #1a3c5e; --accent: #e8a020; --bg: #f0f4f8; --card: #ffffff;
+  --text: #1a2535; --muted: #6b7a8d; --border: #dde3ec;
+  --hot: #e74c3c; --warm: #e8a020; --counsel: #2980b9; --timepass: #95a5a6; --enrolled: #27ae60;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
+.header { background: var(--primary); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+.header-brand { display: flex; align-items: center; gap: 12px; }
+.header-logo { width: 42px; height: 42px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 16px; color: white; }
+.header-title h1 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: white; }
+.header-title p { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 1px; }
+.demo-badge { background: var(--accent); color: white; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; font-family: 'Sora', sans-serif; }
+.layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; height: calc(100vh - 70px); max-width: 1200px; margin: 0 auto; padding: 16px; }
+.chat-panel { background: var(--card); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+.chat-header { background: #075E54; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+.chat-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: white; flex-shrink: 0; }
+.chat-header-info h3 { font-size: 14px; font-weight: 500; color: white; }
+.chat-header-info p { font-size: 11px; color: rgba(255,255,255,0.7); }
+.online-dot { display: inline-block; width: 7px; height: 7px; background: #25D366; border-radius: 50%; margin-right: 4px; }
+.ai-chip { margin-left: auto; background: rgba(255,255,255,0.15); color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 500; }
+.messages { flex: 1; overflow-y: auto; padding: 16px; background: #ece5dd; display: flex; flex-direction: column; gap: 6px; }
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.bubble { max-width: 78%; padding: 9px 13px 6px; border-radius: 12px; font-size: 13.5px; line-height: 1.6; word-break: break-word; }
+.bubble.bot { background: white; color: var(--text); align-self: flex-start; border-top-left-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+.bubble.user { background: #dcf8c6; color: #1a2535; align-self: flex-end; border-top-right-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+.btime { font-size: 10px; color: #999; margin-top: 3px; text-align: right; }
+.bubble.bot .btime { text-align: left; }
+.typing-bubble { background: white; padding: 10px 14px; border-radius: 12px; border-top-left-radius: 3px; align-self: flex-start; display: flex; gap: 4px; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+.typing-bubble span { width: 7px; height: 7px; border-radius: 50%; background: #aaa; animation: ty 1.1s infinite; }
+.typing-bubble span:nth-child(2) { animation-delay: 0.18s; }
+.typing-bubble span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes ty { 0%,60%,100%{transform:translateY(0);opacity:0.5} 30%{transform:translateY(-5px);opacity:1} }
+.quick-wrap { padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 6px; min-height: 44px; }
+.qb { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1.5px solid #075E54; color: #075E54; background: white; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.qb:hover { background: #075E54; color: white; }
+.input-row { display: flex; gap: 8px; padding: 10px 12px; background: #f0f0f0; border-top: 1px solid #ddd; align-items: center; }
+.input-row input { flex: 1; padding: 9px 14px; border-radius: 24px; border: none; font-size: 13px; font-family: 'DM Sans', sans-serif; background: white; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.send-btn { width: 38px; height: 38px; border-radius: 50%; background: #075E54; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.send-btn:hover { background: #128C7E; }
+.send-btn svg { width: 18px; height: 18px; fill: white; }
+.send-btn:disabled { background: #ccc; cursor: not-allowed; }
+.crm-panel { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.crm-card { background: var(--card); border-radius: 14px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+.crm-card h4 { font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-box { padding: 10px; border-radius: 10px; text-align: center; }
+.stat-box .sn { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; }
+.stat-box .sl { font-size: 10px; font-weight: 500; margin-top: 1px; }
+.stat-hot { background: #fdf0ef; } .stat-hot .sn { color: var(--hot); } .stat-hot .sl { color: #c0392b; }
+.stat-warm { background: #fef9ee; } .stat-warm .sn { color: var(--warm); } .stat-warm .sl { color: #b7770d; }
+.stat-counsel { background: #eaf4fb; } .stat-counsel .sn { color: var(--counsel); } .stat-counsel .sl { color: #1a6898; }
+.stat-enrolled { background: #eafaf1; } .stat-enrolled .sn { color: var(--enrolled); } .stat-enrolled .sl { color: #1e8449; }
+.info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.info-label { color: var(--muted); font-size: 12px; }
+.info-val { font-weight: 500; font-size: 13px; }
+.cat-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; font-family: 'Sora', sans-serif; }
+.cat-hot { background: #fdf0ef; color: var(--hot); }
+.cat-warm { background: #fef9ee; color: #b7770d; }
+.cat-counsel { background: #eaf4fb; color: var(--counsel); }
+.cat-timepass { background: #f4f4f4; color: var(--timepass); }
+.leads-list { display: flex; flex-direction: column; gap: 7px; max-height: 220px; overflow-y: auto; }
+.lead-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; background: var(--bg); border-left: 3px solid transparent; }
+.lead-av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 12px; color: white; flex-shrink: 0; }
+.lead-info { flex: 1; min-width: 0; }
+.lead-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lead-course { font-size: 11px; color: var(--muted); }
+.lead-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 8px; flex-shrink: 0; }
+.insight-box { background: linear-gradient(135deg, #1a3c5e, #0d2640); border-radius: 12px; padding: 14px; color: white; }
+.insight-box p { font-size: 12px; line-height: 1.6; opacity: 0.9; }
+.ai-tag { display: inline-block; background: var(--accent); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; font-family: 'Sora', sans-serif; }
+.error-bar { background: #fdf0ef; border: 1px solid #f5c6c6; color: #c0392b; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin: 8px 12px; display: none; }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } .crm-panel { display: none; } .chat-panel { height: calc(100vh - 90px); } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-brand">
+    <div class="header-logo">ABS</div>
+    <div class="header-title">
+      <h1>ABS Foundation, Bhilai</h1>
+      <p>AI Counselor — Powered by Gemini AI</p>
+    </div>
+  </div>
+  <span class="demo-badge">LIVE DEMO</span>
+</div>
+<div class="layout">
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="chat-avatar">ABS</div>
+      <div class="chat-header-info">
+        <h3>ABS Foundation Bhilai</h3>
+        <p><span class="online-dot"></span>AI Counselor Active</p>
+      </div>
+      <span class="ai-chip">⚡ Gemini AI</span>
+    </div>
+    <div class="messages" id="msgs"></div>
+    <div class="error-bar" id="errBar"></div>
+    <div class="quick-wrap" id="qwrap"></div>
+    <div class="input-row">
+      <input type="text" id="uinput" placeholder="Type your message..." onkeydown="if(event.key==='Enter' && !sending)sendMsg()"/>
+      <button class="send-btn" id="sendBtn" onclick="sendMsg()" aria-label="Send">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="crm-panel">
+    <div class="crm-card">
+      <h4>Lead Summary</h4>
+      <div class="stats-grid">
+        <div class="stat-box stat-hot"><div class="sn" id="cnt-hot">0</div><div class="sl">🔥 Hot Leads</div></div>
+        <div class="stat-box stat-warm"><div class="sn" id="cnt-warm">0</div><div class="sl">⭐ Interested</div></div>
+        <div class="stat-box stat-counsel"><div class="sn" id="cnt-counsel">0</div><div class="sl">💬 Counseling</div></div>
+        <div class="stat-box stat-enrolled"><div class="sn" id="cnt-enrolled">0</div><div class="sl">✅ Enrolled</div></div>
+      </div>
+    </div>
+    <div class="crm-card" id="studentCard" style="display:none">
+      <h4>Current Student</h4>
+      <div class="info-row"><span class="info-label">Name</span><span class="info-val" id="si-name">—</span></div>
+      <div class="info-row"><span class="info-label">Class / Level</span><span class="info-val" id="si-class">—</span></div>
+      <div class="info-row"><span class="info-label">Course Interest</span><span class="info-val" id="si-course">—</span></div>
+      <div class="info-row"><span class="info-label">Status</span><span id="si-badge">—</span></div>
+    </div>
+    <div class="crm-card">
+      <h4>Lead Pipeline</h4>
+      <div class="leads-list" id="leadsList">
+        <div class="lead-item" style="border-left-color:#e74c3c">
+          <div class="lead-av" style="background:#e74c3c">RS</div>
+          <div class="lead-info"><div class="lead-name">Rahul Sharma</div><div class="lead-course">CA Foundation</div></div>
+          <span class="lead-badge cat-hot">Hot</span>
+        </div>
+        <div class="lead-item" style="border-left-color:#2980b9">
+          <div class="lead-av" style="background:#2980b9">PV</div>
+          <div class="lead-info"><div class="lead-name">Priya Verma</div><div class="lead-course">CMA Inter</div></div>
+          <span class="lead-badge cat-counsel">Counseling</span>
+        </div>
+      </div>
+    </div>
+    <div class="crm-card">
+      <h4>AI Insight</h4>
+      <div class="insight-box" id="aiInsight">
+        <div class="ai-tag">AI ANALYSIS</div>
+        <p>Waiting for student interaction...</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let chatHistory = [];
+let studentData = { name: null, class: null, course: null, category: null };
+let sending = false;
+let counts = { hot: 0, warm: 0, counsel: 0, enrolled: 0 };
+let leadAdded = false;
+const avColors = ["#e74c3c","#2980b9","#27ae60","#e8a020","#8e44ad","#16a085"];
+
+function getTime() {
+  const d = new Date(); let h = d.getHours(), m = String(d.getMinutes()).padStart(2,"0");
+  const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; return h + ":" + m + " " + ap;
+}
+function addBubble(text, type) {
+  const msgs = document.getElementById("msgs");
+  const d = document.createElement("div"); d.className = "bubble " + type;
+  d.innerHTML = text.replace(/\n/g,"<br>") + '<div class="btime">' + getTime() + (type==="user"?" ✓✓":"") + "</div>";
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+}
+function showTyping() {
+  const msgs = document.getElementById("msgs");
+  const t = document.createElement("div"); t.className = "typing-bubble"; t.id = "typing";
+  t.innerHTML = "<span></span><span></span><span></span>"; msgs.appendChild(t); msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { const t = document.getElementById("typing"); if(t) t.remove(); }
+function setQR(replies) {
+  document.getElementById("qwrap").innerHTML = (replies||[]).map(r=>`<button class="qb" onclick="sendQR('${r.replace(/'/g,"\\'")}')">${r}</button>`).join("");
+}
+function parseCRM(raw) {
+  try { const m = raw.match(/###CRM###(.+?)###END###/s); return m ? JSON.parse(m[1]) : null; } catch(e) { return null; }
+}
+function stripCRM(text) { return text.replace(/###CRM###[\s\S]*?###END###/g,"").replace(/\*\*/g,"").trim(); }
+
+function updateCRM(data) {
+  if (!data) return;
+  if (data.name && data.name !== "null" && !studentData.name) studentData.name = data.name;
+  if (data.class && data.class !== "null") studentData.class = data.class;
+  if (data.course && data.course !== "null") studentData.course = data.course;
+  if (data.category && data.category !== "null" && data.category !== studentData.category) {
+    if (studentData.category && counts[studentData.category] !== undefined) counts[studentData.category] = Math.max(0, counts[studentData.category]-1);
+    studentData.category = data.category;
+    if (counts[data.category] !== undefined) counts[data.category]++;
+    updateCounts(); updateInsight();
+    if (!leadAdded && studentData.name) { addToLeads(); leadAdded = true; }
+  }
+  const card = document.getElementById("studentCard"); card.style.display = "block";
+  document.getElementById("si-name").textContent = studentData.name || "Collecting...";
+  document.getElementById("si-class").textContent = studentData.class || "—";
+  document.getElementById("si-course").textContent = studentData.course || "—";
+  const cats = { hot:["Hot Lead 🔥","cat-badge cat-hot"], warm:["Interested ⭐","cat-badge cat-warm"], counsel:["Needs Counseling 💬","cat-badge cat-counsel"], timepass:["Timepass 😴","cat-badge cat-timepass"] };
+  const badgeEl = document.getElementById("si-badge");
+  if (studentData.category && cats[studentData.category]) badgeEl.innerHTML = `<span class="${cats[studentData.category][1]}">${cats[studentData.category][0]}</span>`;
+}
+function updateCounts() {
+  document.getElementById("cnt-hot").textContent = counts.hot;
+  document.getElementById("cnt-warm").textContent = counts.warm;
+  document.getElementById("cnt-counsel").textContent = counts.counsel;
+  document.getElementById("cnt-enrolled").textContent = counts.enrolled;
+}
+function addToLeads() {
+  if (!studentData.name) return;
+  const col = avColors[Math.floor(Math.random()*avColors.length)];
+  const initials = studentData.name.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+  const catMap = {hot:["#e74c3c","Hot","cat-hot"],warm:["#e8a020","Interested","cat-warm"],counsel:["#2980b9","Counseling","cat-counsel"],timepass:["#95a5a6","Timepass","cat-timepass"]};
+  const c = catMap[studentData.category] || catMap.counsel;
+  const item = document.createElement("div"); item.className = "lead-item"; item.style.borderLeftColor = c[0];
+  item.innerHTML = `<div class="lead-av" style="background:${col}">${initials}</div><div class="lead-info"><div class="lead-name">${studentData.name}</div><div class="lead-course">${studentData.course||"Commerce"}</div></div><span class="lead-badge ${c[2]}">${c[1]}</span>`;
+  document.getElementById("leadsList").prepend(item);
+}
+function updateInsight() {
+  const n = studentData.name || "Student"; const c = studentData.course || "a commerce course";
+  const msgs = {
+    hot:`<div class="ai-tag">AI ANALYSIS</div><p><strong>${n}</strong> is a Hot Lead! Ready to join ${c}. Call within 30 mins for best conversion. 🔥</p>`,
+    warm:`<div class="ai-tag">AI ANALYSIS</div><p><strong>${n}</strong> is interested in ${c}. Share fee structure & batch schedule. Follow up tomorrow.</p>`,
+    counsel:`<div class="ai-tag">AI ANALYSIS</div><p><strong>${n}</strong> needs counseling on ${c}. Has doubts. Assign senior counselor for 1-on-1 call.</p>`,
+    timepass:`<div class="ai-tag">AI ANALYSIS</div><p>Low intent detected. Add to nurture list. Re-engage in 7 days with free webinar invite.</p>`
+  };
+  if (studentData.category) document.getElementById("aiInsight").innerHTML = msgs[studentData.category] || msgs.counsel;
+}
+function suggestQR(text) {
+  const l = text.toLowerCase();
+  if (l.includes("fees") || l.includes("kitni")) return ["EMI option hai?","Scholarship milegi?","Demo class book karo"];
+  if (l.includes("ca") && l.includes("cma")) return ["CA Foundation","CMA Foundation","Difference batao"];
+  if (l.includes("demo") || l.includes("counselor")) return ["Haan, book karo!","Call karwa do","WhatsApp pe bhejo"];
+  if (l.includes("batch") || l.includes("timing")) return ["Morning batch","Evening batch","Weekend batch"];
+  if (l.includes("career") || l.includes("scope")) return ["CA career scope","CMA ke baad kya?","CS kya hota hai?"];
+  return ["Fees batao","Demo class book karo","Counselor se baat karni hai"];
+}
+
+async function doSend(text) {
+  sending = true;
+  document.getElementById("sendBtn").disabled = true;
+  document.getElementById("errBar").style.display = "none";
+  setQR([]);
+  addBubble(text, "user");
+  chatHistory.push({ role: "user", content: text });
+  showTyping();
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chatHistory })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "API error");
+    const raw = data.text || "";
+    const reply = stripCRM(raw);
+    const crm = parseCRM(raw);
+    removeTyping();
+    addBubble(reply, "bot");
+    chatHistory.push({ role: "assistant", content: raw });
+    if (crm) updateCRM(crm);
+    setQR(suggestQR(reply));
+  } catch(e) {
+    removeTyping();
+    const eb = document.getElementById("errBar");
+    eb.textContent = "Error: " + e.message + " — Please try again.";
+    eb.style.display = "block";
+    chatHistory.pop();
+  }
+  sending = false;
+  document.getElementById("sendBtn").disabled = false;
+  document.getElementById("uinput").focus();
+}
+
+function sendMsg() { const v = document.getElementById("uinput").value.trim(); if(!v||sending) return; document.getElementById("uinput").value=""; doSend(v); }
+function sendQR(t) { if(!sending) doSend(t); }
+
+async function init() {
+  showTyping();
+  chatHistory.push({ role: "user", content: "START_CONVERSATION" });
+  try {
+    const res = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ messages: chatHistory }) });
+    const data = await res.json();
+    const raw = data.text || "";
+    removeTyping();
+    addBubble(stripCRM(raw), "bot");
+    chatHistory.push({ role: "assistant", content: raw });
+    if (parseCRM(raw)) updateCRM(parseCRM(raw));
+    setQR(["CA Foundation","CMA","CS","Class 11-12","B.Com"]);
+  } catch(e) {
+    removeTyping();
+    addBubble("Namaste! 🙏 Main hoon ABS Foundation Bhilai ki AI Counselor Priya. Aapka swagat hai! Apna naam batayein?", "bot");
+    setQR(["CA Foundation","CMA","CS","Class 11-12","B.Com"]);
+  }
+}
+init();
+</script>
+</body>
+</html>
